@@ -202,8 +202,8 @@ local function process_opt(cfg, template, opt, value)
     cfg.project = value
   elseif (opt == 'year' or opt == 'y') then
     local year = value
-    assert(year:match('^%d+%-*%d*$'), ('Wrong year: <%s>'):format(value))
-    cfg.year = year
+    assert(year:match('^[%d]+[%D+]*[%d+]*$'), ('Wrong year: <%s>'):format(value))
+    cfg.year = (year:gsub('[%D]+','-'))
   end
 end
 
