@@ -182,13 +182,15 @@ local function process_opt(cfg, template, opt, value)
     local vars = get_template_vars(template)
     print(('License <%s> vars:'):format(template))
     for _, var in ipairs(vars) do
-      print('  >> '..var)
+      print('  >> ' .. var)
     end
     os.exit()
   elseif (opt == 'list' or opt == 'l') then
-    local list = get_printable_list(templates_list)
+    local sort_list = true
+    local list = collect_keys(templates_list, sort_list)
+    print(('Available licenses templates:'):format(template))    
     for _,template in pairs(list) do
-      print(template)
+      print('  >> ' .. template)
     end
     os.exit()
   elseif (opt == 'org' or opt == 'o') then
