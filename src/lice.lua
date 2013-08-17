@@ -5,11 +5,22 @@
 -- =========================================
 
 -- =========================================
--- Internal variables declaration
+-- Internals declaration
 -- =========================================
 
--- Dependency for filesystem facilities
+-- External dependency for filesystem facilities
 local lfs                  = require 'lfs'
+
+-- Local binding to global native variables
+local package = package
+local os_getenv = os.getenv
+local io_open = io.open
+local pairs = pairs
+local ipairs = ipairs
+local table_sort = table.sort
+local table_concat = table.concat
+local assert = assert
+local print = print
 
 -- Pattern-matching templates
 local TPL_FOLDER           = 'templates'
@@ -39,9 +50,9 @@ end
 -- Returns the username. Supports Windows and Unix'es as-is.
 local function get_username()
   if is_windows then
-    return os.getenv('USERNAME')
+    return os_getenv('USERNAME')
   end
-  return os.getenv('USER')
+  return os_getenv('USER')
 end
 
 -- Returns the current folder name.
@@ -62,7 +73,7 @@ local function collect_keys(list, sorted)
   local l = {}
   for v in pairs(list) do l[#l+1] = v end
   if sorted then
-    table.sort(l)
+    table_sort(l)
   end
   return l
 end
@@ -86,7 +97,7 @@ end
 -- Returns the contents of a template
 local function get_file_contents(template_name)
   local template_path = get_template_fpath(template_name)
-  local fhandle = assert(io.open(template_path, 'r'), ('Error on attempt to open <%s>'):format(template_path))
+  local fhandle = assert(io_open(template_path, 'r'), ('Error on attempt to open <%s>'):format(template_path))
   local contents = fhandle:read('*a')
   fhandle:close()
   return contents
@@ -228,4 +239,4 @@ do
 end
 
 -- Calls main and process input
-main(table.concat(arg,' '))
+main(table_concat(arg,' '))
