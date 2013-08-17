@@ -59,69 +59,69 @@ local templates_list
 
 -- Collects and returns an array of keys from a given table
 local function collect_keys(list, sorted)
-	local l = {}
-	for v in pairs(list) do l[#l+1] = v end
-	if sorted then
+  local l = {}
+  for v in pairs(list) do l[#l+1] = v end
+  if sorted then
     table.sort(l)
   end
-	return l
+  return l
 end
 
 -- Extracts license name from file name. "-header"'s have to be supplied.
 local function get_template_name(fname)
-	return fname:match(TPL_NAME_PATTERN)
+  return fname:match(TPL_NAME_PATTERN)
 end
 
 -- License name to file template name.
 local function get_template_fname(name)
-	return (TPL_TO_FNAME_PATTERN):format(name)
+  return (TPL_TO_FNAME_PATTERN):format(name)
 end
 
 -- Builds the path to license file name.
 -- Returned path is relative to the source folder.
 local function get_template_fpath(name)
-	return ('%s/%s'):format(TPL_FOLDER, get_template_fname(name))
+  return ('%s/%s'):format(TPL_FOLDER, get_template_fname(name))
 end
 
 -- Returns the contents of a template
 local function get_file_contents(template_name)
-	local template_path = get_template_fpath(template_name)
-	local fhandle = assert(io.open(template_path, 'r'), ('Error on attempt to open <%s>'):format(template_path))
-	local contents = fhandle:read('*a')
-	fhandle:close()
-	return contents
+  local template_path = get_template_fpath(template_name)
+  local fhandle = assert(io.open(template_path, 'r'), ('Error on attempt to open <%s>'):format(template_path))
+  local contents = fhandle:read('*a')
+  fhandle:close()
+  return contents
 end
 
 -- Returns a list of available templates
 -- Template names are stored as keys
 local function get_templates_list(path)
-	local l = {}
-	for fname in lfs.dir(path) do
-		if templ~='.' and templ~= '..' then
-			local template_name = get_template_name(fname)
-			if template_name then
-				l[template_name] = true
-			end
-		end
-	end
-	return l
+  local l = {}
+  for fname in lfs.dir(path) do
+    if templ~='.' and templ~= '..' then
+      local template_name = get_template_name(fname)
+      if template_name then
+        l[template_name] = true
+      end
+    end
+  end
+  return l
 end
 
 -- Returns a list of available templates
 -- Template names are stored as keys
 local function get_template_vars(template_name)
-	local contents = get_file_contents(template_name)
-	local vars = {}
-	for var in contents:gmatch(TPL_VARS_PATTERN) do
-		vars[#vars+1] = var
-	end
-	return vars
+  local contents = get_file_contents(template_name)
+  local vars = {}
+  for var in contents:gmatch(TPL_VARS_PATTERN) do
+    vars[#vars+1] = var
+  end
+  return vars
 end
 
 -- Interpolates template variables with the provided set of options
 local function write_license(opts)
-	local source = get_file_contents(opts.fname)
-	return (source:gsub(TPL_VARS_PATTERN,opts))
+  local source = get_file_contents(opts.fname)
+  return (source:gsub(TPL_VARS_PATTERN,opts))
 end
 
 -- =============================================
@@ -130,19 +130,19 @@ end
 
 -- Checker for input opt
 local function check_opt_style(dash, opt)
-	assert(not dash:match('[^%-]'), 'Input is not valid')
-	assert(dash:match('^%-%-?$'), 'Input is not valid')
-	if dash == '-' then
-		assert(opt:len() == 1, ('The following was probably mistyped : <%s>'):format(dash..opt))
-	elseif dash == '--' then
-		assert(opt:len() > 1, ('The following was probably mistyped : <%s>'):format(dash..opt))
-	end
+  assert(not dash:match('[^%-]'), 'Input is not valid')
+  assert(dash:match('^%-%-?$'), 'Input is not valid')
+  if dash == '-' then
+    assert(opt:len() == 1, ('The following was probably mistyped : <%s>'):format(dash..opt))
+  elseif dash == '--' then
+    assert(opt:len() > 1, ('The following was probably mistyped : <%s>'):format(dash..opt))
+  end
 end
 
 -- Processes input opt
 local function process_opt(cfg, template, opt, value)
-	if (opt == 'help' or opt == 'h') then
-		print([[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT] [-t TEMPLATE_PATH] [-y YEAR]
+  if (opt == 'help' or opt == 'h') then
+    print([[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT] [-t TEMPLATE_PATH] [-y YEAR]
                 [--vars] [--header]
 
     positional arguments:
@@ -157,59 +157,59 @@ local function process_opt(cfg, template, opt, value)
       --header (no args)        when supplied, will only use the header license if available
       --list (no args)          when supplied, list the available licenses templates]]
     )
-		os.exit()
+    os.exit()
   elseif opt == 'vars' then
-		local vars = get_template_vars(template)
-		for _, var in ipairs(vars) do
-			print(var)
-		end
-		os.exit()
-	elseif (opt == 'list' or opt == 'l') then
+    local vars = get_template_vars(template)
+    for _, var in ipairs(vars) do
+      print(var)
+    end
+    os.exit()
+  elseif (opt == 'list' or opt == 'l') then
     local list = get_printable_list(templates_list)
-		for _,template in pairs(list) do
-			print(template)
-		end
-		os.exit()
-	elseif (opt == 'org' or opt == 'o') then
-		cfg.organization = value
-	elseif (opt == 'proj' or opt == 'p') then
+    for _,template in pairs(list) do
+      print(template)
+    end
+    os.exit()
+  elseif (opt == 'org' or opt == 'o') then
+    cfg.organization = value
+  elseif (opt == 'proj' or opt == 'p') then
     cfg.project = value
   elseif (opt == 'year' or opt == 'y') then
-		local year = value
-		assert(year:match('^%d+%-*%d*$'), ('Wrong year: <%s>'):format(value))
-		cfg.year = year
-	end
+    local year = value
+    assert(year:match('^%d+%-*%d*$'), ('Wrong year: <%s>'):format(value))
+    cfg.year = year
+  end
 end
 
 -- Main routine, catch and process args
 local function main(_args)
-	local template = _args:match(GET_OPT_LIC_PATTERN) or DEFAULT_LIC_TEMPLATE
+  local template = _args:match(GET_OPT_LIC_PATTERN) or DEFAULT_LIC_TEMPLATE
 
   -- Handle headers template name auto-completion
-	if _args:match('%-%-header') and not template:match('%-header$') then
-		template = template .. '-header'
-	end
+  if _args:match('%-%-header') and not template:match('%-header$') then
+    template = template .. '-header'
+  end
 
   -- Asserts the required license is available
   assert(templates_list[template], ('License <%s> is not available'):format(template))
 
   -- Default config
-	local cfg = {
-		fname = template,                                       -- The template
-		organization = get_username(),                          -- Defaults to ENV_VAR USERNAME on Windows
-		project = get_current_folder_name(),                    -- Defaults to current directory
-		year = os.date('%Y'),                                   -- Defaults to current year
-	}
+  local cfg = {
+    fname = template,                                       -- The template
+    organization = get_username(),                          -- Defaults to ENV_VAR USERNAME on Windows
+    project = get_current_folder_name(),                    -- Defaults to current directory
+    year = os.date('%Y'),                                   -- Defaults to current year
+  }
 
   -- Catch, check and resolve options
-	for dash, _opt, value in _args:gmatch(GET_OPT_PATTERN) do
-		local opt = _opt:lower()
-		check_opt_style(dash, opt)
-		process_opt(cfg, template, opt, value)
-	end
+  for dash, _opt, value in _args:gmatch(GET_OPT_PATTERN) do
+    local opt = _opt:lower()
+    check_opt_style(dash, opt)
+    process_opt(cfg, template, opt, value)
+  end
 
   -- Write license to output
-	print(write_license(cfg))
+  print(write_license(cfg))
 end
 
 -- Creates the list of templates
