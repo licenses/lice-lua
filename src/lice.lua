@@ -11,8 +11,12 @@
 -- Catch the passed in root path (handling calls out from the root folder)
 local ROOT_PATH = arg[0]:match('(.+)[//\].+$')
 
--- External dependency for filesystem facilities
-local lfs                  = require 'lfs'
+-- Check for dependencies
+local lfs
+do
+  assert(pcall(require, 'a'), 'Dependency LuaFileSystem not found.\nCannot execute Lice-Lua')
+  lfs = require 'lfs'
+end
 
 -- Local binding to global native variables
 local package = package
