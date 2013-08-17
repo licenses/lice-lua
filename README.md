@@ -8,7 +8,7 @@ It generates license files.
 
 ### Manual download
 
-* Latest (v0.0.1, stable, recommended): [Zip]() | [Tar.gz]()
+* Latest (v0.0.1, stable, recommended): [Zip](https://github.com/Yonaba/lice-lua/archive/lice-lua-0.0.1-1.zip) | [Tar.gz](https://github.com/Yonaba/lice-lua/archive/lice-lua-0.0.1-1.tar.gz)
 * Development version (unstable, not recommended): [Zip](https://github.com/Yonaba/lice-lua/archive/master.zip) | [Tar.gz](https://github.com/Yonaba/lice-lua/archive/master.tar)
 * Previous releases: [Tags](https://github.com/Yonaba/lice-lua/releases)
 
@@ -17,19 +17,6 @@ It generates license files.
 ```bash
 git clone git@github.com/Yonaba/lice-lua
 ````
-
-### From LuaRocks:
-
-```bash
-luarocks install lice-lua
-````
-
-### From MoonRocks:
-
-```bash
-luarocks install --server=http://rocks.moonscript.org/manifests/Yonaba lice-lua
-````
-
 
 ## Overview
 
