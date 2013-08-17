@@ -171,11 +171,11 @@ local function process_opt(cfg, template, opt, value)
       
     optional arguments taking no values (no args)
       --vars                    when supplied, list template variables for 
-                                specified license
+                                specified license and exit
       --header                  when supplied, will only use the header license
                                 if available
       --list                    when supplied, list the available licenses 
-                                templates]]
+                                templates and exit]]
     )
     os.exit()
   elseif opt == 'vars' then
