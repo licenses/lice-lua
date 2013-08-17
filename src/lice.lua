@@ -56,7 +56,7 @@ end
 
 -- Returns the username. Supports Windows and Unix'es as-is.
 local function get_username()
-  if is_windows then
+  if is_windows() then
     return os_getenv('USERNAME')
   end
   return os_getenv('USER')
