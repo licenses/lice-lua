@@ -142,26 +142,36 @@ end
 -- Processes input opt
 local function process_opt(cfg, template, opt, value)
   if (opt == 'help' or opt == 'h') then
-    print([[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT] [-t TEMPLATE_PATH] [-y YEAR]
-                [--vars] [--header]
+    print([[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT]
+                                   [-t TEMPLATE_PATH] [-y YEAR]
+                                   [--vars] [--header]
 
     positional arguments:
-      license                   the license to generate. Defaults to bsd3 when not given.
-
+      license                   the license to generate. Defaults to bsd3 
+                                when not given.
+                                
     optional arguments:
       -h, --help                show this help message and exit
-      -o, --org ORGANIZATION    organization, defaults environment variable "USERNAME" (on Windows)
-      -p, --proj PROJECT        name of project, defaults to name of current directory
+      -o, --org ORGANIZATION    organization, defaults environment variable
+                                "USERNAME" (on Windows) or "USER" (on Unix'es).
+      -p, --proj PROJECT        name of project, defaults to name of current 
+                                directory
       -y, --year YEAR           copyright year
-      --vars (no args)          when supplied, list template variables for specified license
-      --header (no args)        when supplied, will only use the header license if available
-      --list (no args)          when supplied, list the available licenses templates]]
+      
+    optional arguments taking no values (no args)
+      --vars                    when supplied, list template variables for 
+                                specified license
+      --header                  when supplied, will only use the header license
+                                if available
+      --list                    when supplied, list the available licenses 
+                                templates]]
     )
     os.exit()
   elseif opt == 'vars' then
     local vars = get_template_vars(template)
+    print(('License <%s> vars:'):format(template))
     for _, var in ipairs(vars) do
-      print(var)
+      print('  >> '..var)
     end
     os.exit()
   elseif (opt == 'list' or opt == 'l') then
