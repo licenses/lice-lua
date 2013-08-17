@@ -8,6 +8,9 @@
 -- Internals declaration
 -- =========================================
 
+-- Catch the passed in root path (handling calls out from the root folder)
+local ROOT_PATH = arg[0]:match('(.+)[//\].+$')
+
 -- External dependency for filesystem facilities
 local lfs                  = require 'lfs'
 
@@ -23,7 +26,7 @@ local assert = assert
 local print = print
 
 -- Pattern-matching templates
-local TPL_FOLDER           = 'templates'
+local TPL_FOLDER           = ('%stemplates'):format(ROOT_PATH and (ROOT_PATH ..'/') or '')
 local TPL_VARS_PATTERN     = '{{%s([^{}]+)%s}}'
 local TPL_NAME_PATTERN     = '^template%-([a-z0-9%_]+[%-header]*)%.txt$'
 local TPL_TO_FNAME_PATTERN = 'template-%s.txt'
@@ -212,7 +215,7 @@ local function main(_args)
   if _args:match('%-%-header') and not template:match('%-header$') then
     template = template .. '-header'
   end
-
+  
   -- Asserts the required license is available
   assert(templates_list[template], ('License <%s> is not available'):format(template))
 
