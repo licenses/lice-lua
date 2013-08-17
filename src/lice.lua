@@ -12,11 +12,11 @@
 local lfs                  = require 'lfs'
 
 -- Pattern-matching templates
-local TPL_FOLDER           = ('templates')
+local TPL_FOLDER           = 'templates'
 local TPL_VARS_PATTERN     = '{{%s([^{}]+)%s}}'
 local TPL_NAME_PATTERN     = '^template%-([a-z0-9%_]+[%-header]*)%.txt$'
 local TPL_TO_FNAME_PATTERN = 'template-%s.txt'
-local GET_OPT_PATTERN      = '(%-%-?)(%a+)%s*([%w+%_*%-*,*]*)'
+local GET_OPT_PATTERN      = '(%-%-?)(%a+)%s*([^%-]*)'
 local GET_OPT_LIC_PATTERN  = '^([a-z0-9%_]+)'
 
 -- Default License template
