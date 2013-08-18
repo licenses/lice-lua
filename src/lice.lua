@@ -1,7 +1,7 @@
 -- =========================================
 -- Lice-Lua, A license generator for Lua
 -- Copyright (c) 2013 Roland Y., MIT License
--- version 0.0.1 - Uses Lua 5.1
+-- version 0.0.1 - Uses Lua >= 5.x
 -- =========================================
 
 -- =========================================
@@ -14,7 +14,8 @@ local ROOT_PATH = arg[0]:match('(.+)[//\].+$')
 -- Check for dependencies
 local lfs
 do
-  assert(pcall(require, 'lfs'), 'Dependency LuaFileSystem not found.\nCannot execute Lice-Lua')
+  assert(pcall(require, 'lfs'),
+    'Dependency LuaFileSystem not found.\nCannot execute Lice-Lua')
   lfs = require 'lfs'
 end
 
@@ -104,7 +105,8 @@ end
 -- Returns the contents of a template
 local function get_file_contents(template_name)
   local template_path = get_template_fpath(template_name)
-  local fhandle = assert(io_open(template_path, 'r'), ('Error on attempt to open <%s>'):format(template_path))
+  local fhandle = assert(io_open(template_path, 'r'),
+    ('Error on attempt to open <%s>'):format(template_path))
   local contents = fhandle:read('*a')
   fhandle:close()
   return contents
@@ -115,7 +117,7 @@ end
 local function get_templates_list(path)
   local l = {}
   for fname in lfs.dir(path) do
-    if templ~='.' and templ~= '..' then
+    if fname~='.' and fname~= '..' then
       local template_name = get_template_name(fname)
       if template_name then
         l[template_name] = true
@@ -151,9 +153,11 @@ local function check_opt_style(dash, opt)
   assert(not dash:match('[^%-]'), 'Input is not valid')
   assert(dash:match('^%-%-?$'), 'Input is not valid')
   if dash == '-' then
-    assert(opt:len() == 1, ('The following was probably mistyped : <%s>'):format(dash..opt))
+    assert(opt:len() == 1,
+      ('The following was probably mistyped : <%s>'):format(dash..opt))
   elseif dash == '--' then
-    assert(opt:len() > 1, ('The following was probably mistyped : <%s>'):format(dash..opt))
+    assert(opt:len() > 1,
+      ('The following was probably mistyped : <%s>'):format(dash..opt))
   end
 end
 
@@ -161,8 +165,8 @@ end
 local function process_opt(cfg, template, opt, value)
   if (opt == 'help' or opt == 'h') then
     print([[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT]
-                                   [-t TEMPLATE_PATH] [-y YEAR]
-                                   [--vars] [--header]
+                       [-t TEMPLATE_PATH] [-y YEAR]
+                       [--vars] [--header]
 
     positional arguments:
       license                   the license to generate. Defaults to bsd3 
@@ -171,7 +175,7 @@ local function process_opt(cfg, template, opt, value)
     optional arguments:
       -h, --help                show this help message and exit
       -o, --org ORGANIZATION    organization, defaults environment variable
-                                "USERNAME" (on Windows) or "USER" (on Unix'es).
+                                "USERNAME" (on Windows) or "USER" (on Unix'es)
       -p, --proj PROJECT        name of project, defaults to name of current 
                                 directory
       -y, --year YEAR           copyright year
@@ -206,7 +210,8 @@ local function process_opt(cfg, template, opt, value)
     cfg.project = value
   elseif (opt == 'year' or opt == 'y') then
     local year = value:gsub('%s','')
-    assert(year:match('^[%d]+[%D+]*[%d+]*$'), ('Wrong year: <%s>'):format(value))
+    assert(year:match('^[%d]+[%D+]*[%d+]*$'),
+      ('Wrong year: <%s>'):format(value))
     cfg.year = (year:gsub('[%D]+','-'))
   end
 end
@@ -221,14 +226,15 @@ local function main(_args)
   end
   
   -- Asserts the required license is available
-  assert(templates_list[template], ('License <%s> is not available'):format(template))
+  assert(templates_list[template],
+    ('License <%s> is not available'):format(template))
 
   -- Default config
   local cfg = {
-    fname = template,                                       -- The template
-    organization = get_username(),                          -- Defaults to ENV_VAR USERNAME on Windows
-    project = get_current_folder_name(),                    -- Defaults to current directory
-    year = os.date('%Y'),                                   -- Defaults to current year
+    fname = template,                          -- The template
+    organization = get_username(),             -- Defaults to USERNAME or USER
+    project = get_current_folder_name(),       -- Defaults to current directory
+    year = os.date('%Y'),                      -- Defaults to current year
   }
 
   -- Catch, check and resolve options
