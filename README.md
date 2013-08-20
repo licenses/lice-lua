@@ -8,14 +8,20 @@ It generates license files.
 
 ### Manual download
 
-* Latest (v0.0.1, stable, recommended): [Zip](https://github.com/Yonaba/lice-lua/archive/lice-lua-0.0.1-1.zip) | [Tar.gz](https://github.com/Yonaba/lice-lua/archive/lice-lua-0.0.1-1.tar.gz)
-* Development version (unstable, not recommended): [Zip](https://github.com/Yonaba/lice-lua/archive/master.zip) | [Tar.gz](https://github.com/Yonaba/lice-lua/archive/master.tar)
+* Latest (v0.0.2, stable, recommended): [Zip](https://github.com/licenses/lice-lua/archive/lice-lua-0.0.2-1.zip) | [Tar.gz](https://github.com/licenses/lice-lua/archive/lice-lua-0.0.2-1.tar.gz)
+* Download repository as-is (might be unstable, not recommended): [Zip](https://github.com/licenses/lice-lua/archive/master.zip) | [Tar.gz](https://github.com/licenses/lice-lua/archive/master.tar)
 * Previous releases: [Tags](https://github.com/Yonaba/lice-lua/releases)
 
 ### From git:
 
 ```bash
-git clone git@github.com/Yonaba/lice-lua
+git clone git@github.com/licenses/lice-lua
+````
+
+**Note**: This repository uses [licenses-templates](https://github.com/licenses/license-templates) as a submodule. <br/>In order to fetch those file aswell when cloning from Git, use `--recursive` option.
+
+```bash
+git clone git@github.com/licenses/lice-lua --recursive
 ````
 
 ## Overview
@@ -112,7 +118,7 @@ Is the license you want to submit commonly used?<br/>
 If so, feel free to open an issue or, if you are feeling generous, fork, commit on your own and submit a pull request.
 
 
-## Dependency
+## Dependencies
 __Lice-lua__ requires a single dependency, [LFS](https://github.com/downloads/keplerproject/luafilesystem) (Lua File System), for filesystem facilities.
 
 ## Credits
