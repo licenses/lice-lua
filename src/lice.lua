@@ -1,7 +1,7 @@
 -- =========================================
 -- Lice-Lua, A license generator for Lua
 -- Copyright (c) 2013 Roland Y., MIT License
--- version 0.0.1 - Uses Lua >= 5.x
+-- version 0.0.2 - Uses Lua >= 5.x
 -- =========================================
 
 -- =========================================
@@ -209,10 +209,10 @@ local function process_opt(cfg, template, opt, value)
   elseif (opt == 'proj' or opt == 'p') then
     cfg.project = value
   elseif (opt == 'year' or opt == 'y') then
-    local year = value:gsub('%s','')
+    local year = value:gsub('%s$','')
     assert(year:match('^[%d]+[%D+]*[%d+]*$'),
       ('Wrong year: <%s>'):format(value))
-    cfg.year = (year:gsub('[%D]+','-'))
+    cfg.year = (year:gsub('[^%d]+','-'))
   end
 end
 

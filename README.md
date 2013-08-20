@@ -30,12 +30,14 @@ Generates an MIT license:
 
     lua lice.lua mit
 
-Generate a BSD-3 license, specifying the year and organization/author to be used:
+Generate a BSD-3 license, specifying the year and organization/author to be used (whitespaces are allowed):
 
-    lua lice.lua -y 2012 -o "Sunlight Foundation"
+    lua lice.lua -y 2012 -o Sunlight Foundation
+    lua lice.lua -y 2013 -o This is My Name
 
-It also handles range of years. The separator should be any (single or sequence of) non-digit characters, except whitespace(s) or dash(es).
+It also allows a range of years as input. The separator should be any (single or sequence of) non-digit characters, except dash(es) (whitespaces are allowed):
 
+    lua lice.lua -y 2012 2013
     lua lice.lua -y 2012.2013
     lua lice.lua -y 2012+2013
     lua lice.lua -y 2012,2013
@@ -47,23 +49,24 @@ It also handles multiple authors. Names have to be separated by commas. Whitespa
     
     lua lice.lua -o Moe, Foe, Doe
 
-When `opt -o` is not supplied, it defaults to the environment variable `USERNAME` on Windows systems or `USER` on Unix'es using Lua's native [os.getenv](http://pgl.yoyo.org/luai/i/os.getenv).
+When `opt -o` is not supplied, it defaults to the environment variable `USERNAME` on Windows systems or `USER` on Unix'es and OSX using Lua's native [os.getenv](http://pgl.yoyo.org/luai/i/os.getenv).
 
-The project name is supplied through `opt -p`. Neither whitespaces allowed, nor dashes.
+The project name is supplied through `opt -p`. Whitespaces are allowed.
 
-    lua lice.lua -p MyProject
+    lua lice.lua -p Project
+    lua lice.lua -p This Is My Project
     
-If the project name is not specified, the name of the current directory is used.
+If the project name is not specified, the name of the current directory (from where Lice-Lua is called) is used.
 
-You can see what variables are available to you for any of the licenses:
+You can see what variables are available to you for a specific license:
 
     lua lice.lua mit --vars
     
-You can display a list of available templates with the following:    
+You can display a list of available license templates with the following:    
 
     lua lice.lua --list
 
-For a specific license, in case you want to use the header, supply opt `--header` :   
+For a specific license, in case you want to use the header, supply opt `--header`:   
     
     lua lice.lua agpl3 -o Foo --header
     
@@ -79,9 +82,9 @@ The following can be printed from Lice-Lua using:
 
 What outputs the following:
 
-    [[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT]
-                                       [-t TEMPLATE_PATH] [-y YEAR]
-                                       [--vars] [--header]
+    usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT]
+                           [-t TEMPLATE_PATH] [-y YEAR]
+                           [--vars] [--header]
 
         positional arguments:
           license                   the license to generate. Defaults to bsd3 
@@ -90,7 +93,7 @@ What outputs the following:
         optional arguments:
           -h, --help                show this help message and exit
           -o, --org ORGANIZATION    organization, defaults environment variable
-                                    "USERNAME" (on Windows) or "USER" (on Unix'es).
+                                    "USERNAME" (on Windows) or "USER" (on Unix'es)
           -p, --proj PROJECT        name of project, defaults to name of current 
                                     directory
           -y, --year YEAR           copyright year
