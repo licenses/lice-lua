@@ -1,0 +1,3 @@
+[submodule "src/templates"]
+	path = src/templates
+	url = git@github.com:licenses/license-templates.git

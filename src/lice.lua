@@ -31,10 +31,10 @@ local assert = assert
 local print = print
 
 -- Pattern-matching templates
-local TPL_FOLDER           = ('%stemplates'):format(ROOT_PATH and (ROOT_PATH ..'/') or '')
+local TPL_FOLDER           = ('%stemplates/templates'):format(ROOT_PATH and (ROOT_PATH ..'/') or '')
 local TPL_VARS_PATTERN     = '{{%s([^{}]+)%s}}'
-local TPL_NAME_PATTERN     = '^template%-([a-z0-9%_]+[%-header]*)%.txt$'
-local TPL_TO_FNAME_PATTERN = 'template-%s.txt'
+local TPL_NAME_PATTERN     = '^([a-z0-9%_]+[%-header]*)%.txt$'
+local TPL_TO_FNAME_PATTERN = '%s.txt'
 local GET_OPT_PATTERN      = '(%-%-?)(%a+)%s*([^%-]*)'
 local GET_OPT_LIC_PATTERN  = '^([a-z0-9%_]+)'
 
@@ -118,7 +118,7 @@ local function get_templates_list(path)
   local l = {}
   for fname in lfs.dir(path) do
     if fname~='.' and fname~= '..' then
-      local template_name = get_template_name(fname)
+      local template_name = get_template_name(fname)    
       if template_name then
         l[template_name] = true
       end
