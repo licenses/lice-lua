@@ -1,7 +1,7 @@
 -- =========================================
 -- Lice-Lua, A license generator for Lua
 -- Copyright (c) 2013 Roland Y., MIT License
--- version 0.0.2 - Uses Lua >= 5.x
+-- version 0.0.3 - Uses Lua >= 5.x
 -- =========================================
 
 -- =========================================
@@ -86,6 +86,27 @@ local function collect_keys(list, sorted)
   return l
 end
 
+-- Returns the contents of a file
+local function get_file_contents(file_path)
+  local fhandle = assert(io_open(file_path, 'r'),
+    ('Error on attempt to open <%s>'):format(file_path))
+  local contents = fhandle:read('*a')
+  fhandle:close()
+  return contents
+end
+
+-- Writes contents to file
+local function write_to_file(f, contents, clear)
+  if not clear then
+    local previous_contents = get_file_contents(f)
+    contents = previous_contents .. contents
+  end
+  local fhandle = assert(io_open(f, 'w+'),
+    ('Cannot open file <%s>'):format(f))
+  fhandle:write(contents)
+  fhandle:close()
+end
+
 -- Extracts license name from file name. "-header"'s have to be supplied.
 local function get_template_name(fname)
   return fname:match(TPL_NAME_PATTERN)
@@ -100,16 +121,6 @@ end
 -- Returned path is relative to the source folder.
 local function get_template_fpath(name)
   return ('%s/%s'):format(TPL_FOLDER, get_template_fname(name))
-end
-
--- Returns the contents of a template
-local function get_file_contents(template_name)
-  local template_path = get_template_fpath(template_name)
-  local fhandle = assert(io_open(template_path, 'r'),
-    ('Error on attempt to open <%s>'):format(template_path))
-  local contents = fhandle:read('*a')
-  fhandle:close()
-  return contents
 end
 
 -- Returns a list of available templates
@@ -130,7 +141,8 @@ end
 -- Returns a list of available templates
 -- Template names are stored as keys
 local function get_template_vars(template_name)
-  local contents = get_file_contents(template_name)
+  local template_file_path = get_template_fpath(template_name)
+  local contents = get_file_contents(template_file_path)
   local vars = {}
   for var in contents:gmatch(TPL_VARS_PATTERN) do
     vars[#vars+1] = var
@@ -140,8 +152,24 @@ end
 
 -- Interpolates template variables with the provided set of options
 local function write_license(opts)
-  local source = get_file_contents(opts.fname)
-  return (source:gsub(TPL_VARS_PATTERN,opts))
+  local template_file_path = get_template_fpath(opts.fname)
+  local source = get_file_contents(template_file_path)
+  local license_text = (source:gsub(TPL_VARS_PATTERN,opts))
+  if opts.out then
+    local license_file = opts.out ..
+      (opts.file_ext and ('.' .. opts.file_ext) or '')
+    -- Does the output file already exists ?
+    local is_item = lfs.attributes(license_file)
+    local is_file = is_item and is_item.mode == 'file' or false
+    -- Should we clear its contents  
+    local clear_contents = true
+    if (opts.no_clear and is_file) then
+      clear_contents = false
+    end
+    write_to_file(license_file, license_text, clear_contents)
+  else
+    print(license_text)
+  end
 end
 
 -- =============================================
@@ -179,6 +207,7 @@ local function process_opt(cfg, template, opt, value)
       -p, --proj PROJECT        name of project, defaults to name of current 
                                 directory
       -y, --year YEAR           copyright year
+      -f, --file OFILEPATH      path to the output source file
       
     optional arguments taking no values (no args)
       --vars                    when supplied, list template variables for 
@@ -186,7 +215,10 @@ local function process_opt(cfg, template, opt, value)
       --header                  when supplied, will only use the header license
                                 if available
       --list                    when supplied, list the available licenses 
-                                templates and exit]]
+                                templates and exit
+      --noclear                 when output file is specified and already exists, 
+                                forces its previous contents to be erased and updates
+                                it with the actual license]]
     )
     os.exit()
   elseif opt == 'vars' then
@@ -213,6 +245,8 @@ local function process_opt(cfg, template, opt, value)
     assert(year:match('^[%d]+[%D+]*[%d+]*$'),
       ('Wrong year: <%s>'):format(value))
     cfg.year = (year:gsub('[^%d]+','-'))
+  elseif (opt == 'file' or opt == 'f') then
+    cfg.out = cfg.out or value
   end
 end
 
@@ -225,6 +259,9 @@ local function main(_args)
     template = template .. '-header'
   end
   
+  -- Forces the output file not to be updated
+  local no_clear = _args:match('%-%-noclear') and true or false
+  
   -- Asserts the required license is available
   assert(templates_list[template],
     ('License <%s> is not available'):format(template))
@@ -235,8 +272,9 @@ local function main(_args)
     organization = get_username(),             -- Defaults to USERNAME or USER
     project = get_current_folder_name(),       -- Defaults to current directory
     year = os.date('%Y'),                      -- Defaults to current year
+    no_clear = no_clear
   }
-
+  
   -- Catch, check and resolve options
   for dash, _opt, value in _args:gmatch(GET_OPT_PATTERN) do
     local opt = _opt:lower()
@@ -245,7 +283,7 @@ local function main(_args)
   end
 
   -- Write license to output
-  print(write_license(cfg))
+  write_license(cfg)
 end
 
 -- Creates the list of templates
