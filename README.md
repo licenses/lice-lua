@@ -19,7 +19,7 @@ or
 
 ### Manual download
 
-* Latest [v0.1.0](http://github.com/licenses/lice-lua/tree/lice-lua-0.1.0-1) (stable, recommended): [zip](http://github.com/licenses/lice-lua/archive/lice-lua-0.1.0-1.zip) | [tar](http://github.com/licenses/lice-lua/archive/lice-lua-0.1.0-1.tar.gz)
+* Latest [v0.1.1](http://github.com/licenses/lice-lua/tree/lice-lua-0.1.1-1) (stable, recommended): [zip](http://github.com/licenses/lice-lua/archive/lice-lua-0.1.1-1.zip) | [tar](http://github.com/licenses/lice-lua/archive/lice-lua-0.1.1-1.tar.gz)
 * Cutting-edge development release (*might be unstable, not recommended*): [zip](http://github.com/licenses/lice-lua/archive/master.zip) | [tar](http://github.com/licenses/lice-lua/archive/master.tar)
 * All releases: [tags](http://github.com/Yonaba/lice-lua/releases)
 

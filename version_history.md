@@ -1,5 +1,9 @@
 #Version history#
 
+##0.1.1 (09/10/13)
+
+* Throws an error for unknown opts
+
 ##0.1.0 (09/10/13)
 * Added generated package for templates ([lice-tpl.lua](http://github.com/Yonaba/lice-lua/blob/master/src/lice-tpl.lua)) for easier [rockspec](http://www.luarocks.org/en/Rockspec_format) packaging.
 * Added language comment style formatting option `-l` (aliased `--lang`)

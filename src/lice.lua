@@ -1,7 +1,7 @@
 -- =========================================
 -- Lice-Lua, A license generator for Lua
 -- Copyright (c) 2013 Roland Y., MIT License
--- version 0.1.0 - Uses Lua 5.1, 5.2
+-- version 0.1.1 - Uses Lua 5.1, 5.2
 -- =========================================
 
 -- =========================================
@@ -30,6 +30,7 @@ local tonumber = tonumber
 local table_sort = table.sort
 local table_concat = table.concat
 local assert = assert
+local error = error
 local print = print
 
 -- Pattern-matching templates
@@ -322,6 +323,10 @@ local function process_opt(cfg, template, opt, value)
     end
     assert(supported_lang,('Language <%s> is not supported'):format(lang))
     cfg.lang = supported_lang
+  else  
+    error(
+    ([[Could not resolved unknown opt: <%s>
+    Use -h (or --help) to print help]]):format(opt))
   end
 end
 
