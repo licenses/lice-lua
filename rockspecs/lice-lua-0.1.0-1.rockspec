@@ -6,7 +6,7 @@ source = {
 }
 description = {
    summary = "Command line license generator for Lua",
-   detailed = "A minimal command-line tool to generate open source license files"
+   detailed = "A minimal command-line tool to generate open source license files",
    homepage = "http://github/licenses/lice-lua",
    license = "MIT <http://www.opensource.org/licenses/mit-license.php>",
    maintainer = "Roland Yonaba <roland.yonaba@gmail.com>"
@@ -16,12 +16,11 @@ dependencies = {
    "luafilesystem >= 1.4.2",
 }
 build = {
-  type = "builtin",
+  type = "none",
   install = {
     lua = {
       ["lice-lua.lice"] = "src/lice.lua",
       ["lice-lua.lice-tpl"] = "src/lice-tpl.lua",
     }
   },
-  copy_directories = {"tests"}
 }
