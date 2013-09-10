@@ -1,7 +1,7 @@
 -- =========================================
 -- Lice-Lua, A license generator for Lua
 -- Copyright (c) 2013 Roland Y., MIT License
--- version 0.0.3 - Uses Lua >= 5.x
+-- version 0.1.0 - Uses Lua 5.1, 5.2
 -- =========================================
 
 -- =========================================
@@ -9,7 +9,8 @@
 -- =========================================
 
 -- Catch the passed in root path (handling calls out from the root folder)
-local ROOT_PATH = arg[0]:match('(.+)[//\].+$')
+local ROOT_PATH = (arg[0]:match('(.+)[//\].+$') or '')
+local templates_list = require (ROOT_PATH .. '.lice-tpl')
 
 -- Check for dependencies
 local lfs
@@ -25,21 +26,29 @@ local os_getenv = os.getenv
 local io_open = io.open
 local pairs = pairs
 local ipairs = ipairs
+local tonumber = tonumber
 local table_sort = table.sort
 local table_concat = table.concat
 local assert = assert
 local print = print
 
 -- Pattern-matching templates
-local TPL_FOLDER           = ('%stemplates/templates'):format(ROOT_PATH and (ROOT_PATH ..'/') or '')
 local TPL_VARS_PATTERN     = '{{%s([^{}]+)%s}}'
-local TPL_NAME_PATTERN     = '^([a-z0-9%_]+[%-header]*)%.txt$'
-local TPL_TO_FNAME_PATTERN = '%s.txt'
 local GET_OPT_PATTERN      = '(%-%-?)(%a+)%s*([^%-]*)'
 local GET_OPT_LIC_PATTERN  = '^([a-z0-9%_]+)'
+local GET_OPT_DASHES       = '^%-%-?$'
+local OUT_FILE_NAME        = '^([^.]+)%.*'
+local OUT_FILE_EXT         = '%.([^.]+)$'
+local LIC_YEAR_RANGE       = '^[%d]+[%D+]*[%d+]*$'
 
 -- Default License template
 local DEFAULT_LIC_TEMPLATE     = 'bsd3'
+
+-- Binds file exts to LANGS dict
+local LANGS_EXT = {}
+
+-- Languages, comment style and file extensions
+local LANGS_CMT_STYLE = {} 
 
 -- =========================================
 -- Os's facilities
@@ -55,26 +64,72 @@ local function is_windows()
   return (get_dir_sep():match('\\')~=nil)
 end
 
--- Returns the username. Supports Windows and Unix'es as-is.
-local function get_username()
-  if is_windows() then
-    return os_getenv('USERNAME')
+-- Parses major & minor from _VERSION
+local function get_lua_version()
+  local major, minor = _VERSION:match('^Lua%s(%d)%.(%d)%.*%d*$')
+  return tonumber(major), tonumber(minor)
+end
+
+-- Executes command (Lua 5.1 & 5.2 compatible)
+local function execute(cmd)
+  local code = os.execute(cmd)
+  local _, lua_v_minor = get_lua_version()
+  if (lua_v_minor == 1) then
+    return (code==0)
+  elseif (lua_v_minor == 2) then
+    return code
   end
-  return os_getenv('USER')
+end
+
+-- To be visible from `silent_execute`
+local get_file_contents
+
+-- Executes a command
+-- Output is redirected to temporary file
+-- Taken from S. Donovan's Penlight
+-- See https://github.com/stevedonovan/Penlight/blob/master/lua/pl/utils.lua#L229)
+function silent_execute(cmd)
+  local outfile = os.tmpname()
+  local errfile = os.tmpname()
+  if is_windows() then
+    outfile = os_getenv('TEMP')..outfile
+    errfile = os_getenv('TEMP')..errfile
+  end
+  cmd = cmd .. ' >"'..outfile..'" 2>"'..errfile..'"'
+  local success = execute(cmd)
+  local contents = success and get_file_contents(outfile)
+  os.remove(outfile)
+  os.remove(errfile)
+  return contents
+end
+
+-- Get username from Git, if found in the path.
+local function get_username_from_git()
+  return silent_execute('git config user.name')
+end
+
+-- Infers the username
+local function get_username()
+  -- Tries to infer from Git
+  local username = get_username_from_git()
+  if not username then
+    username = is_windows() and 
+      os_getenv('USERNAME') or 
+      os_getenv('USER') or ('')
+  end
+  return username
 end
 
 -- Returns the current folder name.
 -- Uses Os's directory separator
 local function get_current_folder_name()
-  return lfs.currentdir():match(('([^%s]+)$'):format(get_dir_sep()))
+  return lfs.currentdir():match(('([^%s]+)$')
+          :format(get_dir_sep()))
 end
 
 -- =========================================
--- Internal functions helper
+-- Internal functions
 -- =========================================
-
--- Upvalue  declaration, to visible from the helpers
-local templates_list
 
 -- Collects and returns an array of keys from a given table
 local function collect_keys(list, sorted)
@@ -86,18 +141,37 @@ local function collect_keys(list, sorted)
   return l
 end
 
+-- Lookup value in table
+local function table_find(t, v)
+  for k,_v in pairs(t) do
+    if (_v == v) then
+      return true
+    end
+  end
+  return false
+end
+
+-- File extensions to comment style binding helper
+local function add_exts(lang, style, ...)
+  local exts = {...}
+  LANGS_CMT_STYLE[lang] = style   -- Set the style
+  for _,ext in ipairs(exts) do
+    LANGS_EXT[ext] = lang         -- set extensions
+  end
+end
+
 -- Returns the contents of a file
-local function get_file_contents(file_path)
+function get_file_contents(file_path, flag)
   local fhandle = assert(io_open(file_path, 'r'),
     ('Error on attempt to open <%s>'):format(file_path))
-  local contents = fhandle:read('*a')
+  local contents = fhandle:read(flag or '*a')
   fhandle:close()
   return contents
 end
 
 -- Writes contents to file
-local function write_to_file(f, contents, clear)
-  if not clear then
+local function write_to_file(f, contents, append)
+  if append then
     local previous_contents = get_file_contents(f)
     contents = previous_contents .. contents
   end
@@ -107,42 +181,9 @@ local function write_to_file(f, contents, clear)
   fhandle:close()
 end
 
--- Extracts license name from file name. "-header"'s have to be supplied.
-local function get_template_name(fname)
-  return fname:match(TPL_NAME_PATTERN)
-end
-
--- License name to file template name.
-local function get_template_fname(name)
-  return (TPL_TO_FNAME_PATTERN):format(name)
-end
-
--- Builds the path to license file name.
--- Returned path is relative to the source folder.
-local function get_template_fpath(name)
-  return ('%s/%s'):format(TPL_FOLDER, get_template_fname(name))
-end
-
--- Returns a list of available templates
--- Template names are stored as keys
-local function get_templates_list(path)
-  local l = {}
-  for fname in lfs.dir(path) do
-    if fname~='.' and fname~= '..' then
-      local template_name = get_template_name(fname)    
-      if template_name then
-        l[template_name] = true
-      end
-    end
-  end
-  return l
-end
-
--- Returns a list of available templates
--- Template names are stored as keys
+-- Returns a list of available templates vars
 local function get_template_vars(template_name)
-  local template_file_path = get_template_fpath(template_name)
-  local contents = get_file_contents(template_file_path)
+  local contents = templates_list[template_name]
   local vars = {}
   for var in contents:gmatch(TPL_VARS_PATTERN) do
     vars[#vars+1] = var
@@ -150,23 +191,41 @@ local function get_template_vars(template_name)
   return vars
 end
 
+-- Applies language specific comment-style to template contents
+local function apply_comment_style(input, lang)
+  local cmt_style = LANGS_CMT_STYLE[lang]
+  input = input:gsub('([^\n\r]*[\n\r])', function(match)
+    return cmt_style[2] .. match
+  end)
+  return (cmt_style[1] .. '\n' .. input .. cmt_style[3])
+end
+
 -- Interpolates template variables with the provided set of options
 local function write_license(opts)
-  local template_file_path = get_template_fpath(opts.fname)
-  local source = get_file_contents(template_file_path)
+  local source = templates_list[opts.fname]
   local license_text = (source:gsub(TPL_VARS_PATTERN,opts))
-  if opts.out then
-    local license_file = opts.out ..
-      (opts.file_ext and ('.' .. opts.file_ext) or '')
-    -- Does the output file already exists ?
-    local is_item = lfs.attributes(license_file)
-    local is_file = is_item and is_item.mode == 'file' or false
-    -- Should we clear its contents  
-    local clear_contents = true
-    if (opts.no_clear and is_file) then
-      clear_contents = false
+  
+  -- File extension has precedence for language and comment-style inference
+  if opts.file_ext then
+    assert((opts.lang == opts.file_ext) or (not opts.lang), 
+      ('Inconsistency error: <-l %s> and <-f *.%s>'):format((opts.lang or ''), opts.file_ext))
+    -- Apply formatting if extension is featured, otherwise leave it in plain text style.
+    if LANGS_EXT[opts.file_ext] then
+      license_text = apply_comment_style(license_text, LANGS_EXT[opts.file_ext])
     end
-    write_to_file(license_file, license_text, clear_contents)
+  -- If no file extension was provided, use language
+  elseif opts.lang then
+    license_text = apply_comment_style(license_text, opts.lang)    
+  end
+
+  if opts.out then
+    local output_file = opts.out ..
+      (opts.file_ext and ('.' .. opts.file_ext) or '')
+    -- Does an object with a similar name already exists ?
+    local is_item = lfs.attributes(output_file)
+    -- If it is a file, we should append the license inside as a header
+    local append = is_item and (is_item.mode == 'file') or false
+    write_to_file(output_file, license_text, append)
   else
     print(license_text)
   end
@@ -179,11 +238,11 @@ end
 -- Checker for input opt
 local function check_opt_style(dash, opt)
   assert(not dash:match('[^%-]'), 'Input is not valid')
-  assert(dash:match('^%-%-?$'), 'Input is not valid')
+  assert(dash:match(GET_OPT_DASHES), 'Input is not valid')
   if dash == '-' then
     assert(opt:len() == 1,
       ('The following was probably mistyped : <%s>'):format(dash..opt))
-  elseif dash == '--' then
+  elseif (dash == '--') then
     assert(opt:len() > 1,
       ('The following was probably mistyped : <%s>'):format(dash..opt))
   end
@@ -192,46 +251,49 @@ end
 -- Processes input opt
 local function process_opt(cfg, template, opt, value)
   if (opt == 'help' or opt == 'h') then
-    print([[usage: licelua license [-h] [-o ORGANIZATION] [-p PROJECT]
-                       [-t TEMPLATE_PATH] [-y YEAR]
-                       [--vars] [--header]
+    print([[usage: lua lice.lua license [-h] [-o ORGANIZATION] [-p PROJECT]
+                                 [-t TEMPLATE_PATH] [-y YEAR]
+                                 [--vars] [--header]
 
     positional arguments:
-      license                   the license to generate. Defaults to bsd3 
-                                when not given.
+      license                   the license to generate. Defaults to 
+                                bsd3 when not given.
                                 
     optional arguments:
-      -h, --help                show this help message and exit
-      -o, --org ORGANIZATION    organization, defaults environment variable
-                                "USERNAME" (on Windows) or "USER" (on Unix'es)
+      -h, --help                show this help message and exit.
+      -o, --org ORGANIZATION    organization. Defaults to 
+                                "git config user.name", then environment 
+                                variable "USERNAME" (Windows) or "USER" 
+                                (on Unix and OSX).
       -p, --proj PROJECT        name of project, defaults to name of current 
-                                directory
-      -y, --year YEAR           copyright year
-      -f, --file OFILEPATH      path to the output source file
+                                directory.
+      -l, --lang LANGUAGE       format output with language comment style,
+                                if available. Mostly meant for shell output.
+      -y, --year YEAR           copyright year, defaults to current date read 
+                                from system locale.
+      -f, --file OFILEPATH      path to the output source file. Extension, if 
+                                provided, is used to infer a language specific 
+                                formatting style for the license header,
+                                if supported.
       
     optional arguments taking no values (no args)
-      --vars                    when supplied, list template variables for 
-                                specified license and exit
-      --header                  when supplied, will only use the header license
-                                if available
-      --list                    when supplied, list the available licenses 
-                                templates and exit
-      --noclear                 when output file is specified and already exists, 
-                                forces its previous contents to be erased and updates
-                                it with the actual license]]
-    )
+      --vars                    list template variables for the specified 
+                                license and exit.
+      --header                  will only use the header license (if available).
+      --list                    list all available licenses templates and exit
+      ]])
     os.exit()
   elseif opt == 'vars' then
     local vars = get_template_vars(template)
-    print(('License <%s> vars:'):format(template))
+    print(('License <%s> vars:\n'):format(template))
     for _, var in ipairs(vars) do
       print('  >> ' .. var)
     end
     os.exit()
-  elseif (opt == 'list' or opt == 'l') then
+  elseif (opt == 'list') then
     local sort_list = true
     local list = collect_keys(templates_list, sort_list)
-    print(('Available licenses templates:'):format(template))    
+    print(('Available licenses templates:\n'):format(template))    
     for _,template in pairs(list) do
       print('  >> ' .. template)
     end
@@ -241,12 +303,25 @@ local function process_opt(cfg, template, opt, value)
   elseif (opt == 'proj' or opt == 'p') then
     cfg.project = value
   elseif (opt == 'year' or opt == 'y') then
-    local year = value:gsub('%s$','')
-    assert(year:match('^[%d]+[%D+]*[%d+]*$'),
+    local year = value
+    assert(year:match(LIC_YEAR_RANGE),
       ('Wrong year: <%s>'):format(value))
     cfg.year = (year:gsub('[^%d]+','-'))
   elseif (opt == 'file' or opt == 'f') then
-    cfg.out = cfg.out or value
+    cfg.out = cfg.out or value:match(OUT_FILE_NAME)
+    local file_ext = value:lower():match(OUT_FILE_EXT)
+    if file_ext then
+      local lang = LANGS_EXT[file_ext] 
+      cfg.file_ext = value:match(OUT_FILE_EXT)
+    end
+  elseif (opt == 'lang' or opt == 'l') then
+    local lang = value:lower()
+    local supported_lang = LANGS_CMT_STYLE[lang] and lang or false
+    if not supported_lang then
+      supported_lang = LANGS_EXT[lang] 
+    end
+    assert(supported_lang,('Language <%s> is not supported'):format(lang))
+    cfg.lang = supported_lang
   end
 end
 
@@ -259,9 +334,6 @@ local function main(_args)
     template = template .. '-header'
   end
   
-  -- Forces the output file not to be updated
-  local no_clear = _args:match('%-%-noclear') and true or false
-  
   -- Asserts the required license is available
   assert(templates_list[template],
     ('License <%s> is not available'):format(template))
@@ -272,14 +344,13 @@ local function main(_args)
     organization = get_username(),             -- Defaults to USERNAME or USER
     project = get_current_folder_name(),       -- Defaults to current directory
     year = os.date('%Y'),                      -- Defaults to current year
-    no_clear = no_clear
   }
   
   -- Catch, check and resolve options
   for dash, _opt, value in _args:gmatch(GET_OPT_PATTERN) do
     local opt = _opt:lower()
     check_opt_style(dash, opt)
-    process_opt(cfg, template, opt, value)
+    process_opt(cfg, template, opt, (value:gsub('%s$','')))
   end
 
   -- Write license to output
@@ -288,7 +359,19 @@ end
 
 -- Creates the list of templates
 do
-  templates_list = get_templates_list(TPL_FOLDER)
+  
+  -- Registering styles and extensions
+  add_exts('c',         { '/*', ' * ', ' */'},                 'c', 'cc', 'cpp', 'h', 'hpp', 'js', 'css', 'm')
+  add_exts('fortran',   {'! ', '! ', '!'},                     'f'                                           )
+  add_exts('fortran90', {'!* ', '!* ', '!* '},                 'f90'                                         )
+  add_exts('java',      {'/**', '  * ','  */'},                'java'                                        )  
+  add_exts('erlang',    {'%% ', '% ', '%% '},                  'erl'                                         )
+  add_exts('html',      {'<!--', ' ', '-->'},                  'html'                                        )
+  add_exts('lua',       {('-'):rep(80), '-- ', ('-'):rep(80)}, 'lua'                                         )  
+  add_exts('perl',      {'=item', ' ', '=cut'},                'pl'                                          )
+  add_exts('ruby',      {'=begin', ' ', '=end'},               'rb'                                          )
+  add_exts('text',      {'', '', ''},                          'txt'                                         )  
+  add_exts('unix',      {'', '# ',''},                         'py', 'sh'                                    )
 end
 
 -- Calls main and process input
