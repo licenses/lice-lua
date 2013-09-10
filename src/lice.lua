@@ -173,7 +173,7 @@ end
 local function write_to_file(f, contents, append)
   if append then
     local previous_contents = get_file_contents(f)
-    contents = previous_contents .. contents
+    contents = contents .. '\n\n' .. previous_contents
   end
   local fhandle = assert(io_open(f, 'w+'),
     ('Cannot open file <%s>'):format(f))
