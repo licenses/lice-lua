@@ -36,7 +36,7 @@ local print = print
 -- Pattern-matching templates
 local TPL_VARS_PATTERN     = '{{%s([^{}]+)%s}}'
 local GET_OPT_PATTERN      = '(%-%-?)(%a+)%s*([^%-]*)'
-local GET_OPT_LIC_PATTERN  = '^([a-z0-9%_]+)'
+local GET_OPT_LIC_PATTERN  = '^([a-zA-Z0-9%_]+)'
 local GET_OPT_DASHES       = '^%-%-?$'
 local OUT_FILE_NAME        = '^([^.]+)%.*'
 local OUT_FILE_EXT         = '%.([^.]+)$'
@@ -332,7 +332,7 @@ end
 
 -- Main routine, catch and process args
 local function main(_args)
-  local template = _args:match(GET_OPT_LIC_PATTERN) or DEFAULT_LIC_TEMPLATE
+  local template = (_args:match(GET_OPT_LIC_PATTERN) or DEFAULT_LIC_TEMPLATE):lower()
 
   -- Handle headers template name auto-completion
   if _args:match('%-%-header') and not template:match('%-header$') then
