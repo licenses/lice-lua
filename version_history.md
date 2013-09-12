@@ -1,5 +1,11 @@
 #Version history#
 
+##0.1.2 (09/12/2013)
+
+* Fix: uppercase for license names
+* Fix: invalid escape sequence issue with Lua 5.2
+* Fix: passed-in path parsing (from arg[0])
+
 ##0.1.1 (09/10/13)
 
 * Throws an error for unknown opts

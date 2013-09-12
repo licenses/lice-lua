@@ -46,6 +46,7 @@ Generates a BSD-3 license, the default:
 Generates an MIT license:
 
     lua lice.lua mit
+    lua lice.lua EPL
 
 ### Specifying authors/organization
 
