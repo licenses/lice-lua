@@ -9,7 +9,7 @@
 -- =========================================
 
 -- Catch the passed in root path (handling calls out from the root folder)
-local ROOT_PATH = (arg[0]:match('(.+)[//\].+$') or '')
+local ROOT_PATH = (arg[0]:match('(.+)[/\\]%w+%.*%w*') or '')
 local templates_list = require (ROOT_PATH .. '.lice-tpl')
 
 -- Check for dependencies
